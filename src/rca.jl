@@ -4,17 +4,17 @@ mutable struct RCA{T <: Int, d}
 	n::Int # number of cell states
 	# space of cell at time t
 	space_t::Array{T, d}
-	space_tminus1::Array{T, d}
 	# space of cell at time t-1
-	boundary_condition::String
+	space_tminus1::Array{T, d}
+	# boundary_condition::String
 end
 
 function Base.copy(rca::RCA{T, d}) where {T, d}
-	return RCA(rca.n, copy(rca.space_t), copy(rca.space_tminus1), rca.boundary_condition)
+	return RCA(rca.n, copy(rca.space_t), copy(rca.space_tminus1))
 end
 
-function RCA(n::Int, space::Array{Int, d}, boundary_condition::String) where d
-	return RCA(n, space, space, boundary_condition)
+function RCA(n::Int, space::Array{Int, d}) where d
+	return RCA(n, space, space)
 end
 
 function trans!(f::Function, rca::RCA{T, d}) where {T, d}
@@ -41,9 +41,7 @@ function neighborhood(space::AbstractArray{T, d}, iis) where {T <: Int, d}
 	@assert length(iis) == d
 	res = Int[]
 	for diffs in product(repeat([[0, 1, -1]], d)...)
-		if all(1 .<= iis .+ diffs .<= size(space, 1))
-			push!(res, space[(iis .+ diffs)...])
-		end
+		push!(res, space[(mod1.(iis .+ diffs, size(space, 1)))...])
 	end
 	return res
 end

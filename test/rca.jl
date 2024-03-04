@@ -6,11 +6,11 @@ using Test, TinyCA
 
 	space_2d = [1 2 3; 4 5 6; 7 8 9]
 	@test neighborhood(space_2d, (2, 2)) == [5, 8, 2, 6, 9, 3, 4, 7, 1]
-	@test neighborhood(space_2d, (1, 1)) == [1, 4, 2, 5]
+	@test neighborhood(space_2d, (1, 1)) == [1, 4, 7, 2, 5, 8, 3, 6, 9]
 end
 
 @testset "transition" begin
-	rca = RCA(2, [0 1 0; 0 1 0; 0 1 0], "fixed")
+	rca = RCA(2, [0 1 0; 0 1 0; 0 1 0])
 
 	function allone(x)
 		if all(x .== 1)
