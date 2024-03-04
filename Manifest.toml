@@ -2,6 +2,9 @@
 
 julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "f060a2e64e479ab6465690e0158022ef99ef3465"
+project_hash = "ef755b2493ac51f17b7fe8683c01c4bb41db3665"
 
-[deps]
+[[deps.IterTools]]
+git-tree-sha1 = "42d5f897009e7ff2cf88db414a389e5ed1bdd023"
+uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+version = "1.10.0"

@@ -1,6 +1,6 @@
 using TinyCA
 using Test
 
-@testset "TinyCA.jl" begin
-    # Write your tests here.
+@testset "Reversibel CA" begin
+	include("rca.jl")
 end
