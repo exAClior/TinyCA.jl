@@ -10,10 +10,16 @@ using Test, TinyCA
 end
 
 @testset "transition" begin
-	rca = RCA([1 2 1 2; 1 2 1 2; 1 2 1 2; 1 2 1 2])
+	basis = [[1 1; 1 1], [1 1; 2 1], [1 2; 2 1], [1 2; 1 2], [2 2; 1 2], [2 2; 2 2]]
+	random_world = zeros(Int64, 10, 10)
+	for i in 1:2:10, j in 1:2:10
+		random_world[i:(i + 1), j:(j + 1)] = rand(basis)
+	end
+
+	rca = RCA(random_world)
 
 	function reversible_4(x::AbstractMatrix)
-		if x == [1 1; 1 1]
+		if x == [1 1; 1 1] || x == [2 2; 2 2]
 			return x
 		elseif x == [1 1; 2 1]
 			return [1 2; 1 1]
@@ -24,12 +30,12 @@ end
 		elseif x == [2 2; 1 2]
 			return [2 2; 1 2]
 		else
-			return [2 2; 2 2]
+			error("Invalid input")
 		end
 	end
 
 	function inv_reversible_4(x::AbstractMatrix)
-		if x == [1 1; 1 1]
+		if x == [1 1; 1 1] || x == [2 2; 2 2]
 			return x
 		elseif x == [1 2; 1 1]
 			return [1 1; 2 1]
@@ -40,17 +46,18 @@ end
 		elseif x == [2 2; 1 2]
 			return [2 2; 1 2]
 		else
-			return [2 2; 2 2]
+			error("Invalid input")
 		end
 	end
 
 	rca_change = trans!(reversible_4, copy(rca))
+
+	# draw(rca)
+
+	# draw(rca_change)
+
 	rca_change.parity = mod(rca_change.parity + 1, 2)
 	rca_back = trans!(inv_reversible_4, copy(rca_change))
-
-	draw(rca_back)
-
-	draw(rca_change)
 
 	@test rca_back.world == rca.world
 end

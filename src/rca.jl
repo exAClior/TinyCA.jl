@@ -26,6 +26,11 @@ function trans!(f::Function, rca::RCA{T, d}) where {T, d}
 	return rca
 end
 
+function untrans!(f::Function, rca::RCA{T, d}) where {T, d}
+	rca.parity = mod(rca.parity + 1, 2)
+	return trans!(f, rca)
+end
+
 function neighborhood(space::AbstractArray{T, d}, iis) where {T <: Int, d}
 	@assert length(iis) == d
 	cis = LinearIndices(space)
