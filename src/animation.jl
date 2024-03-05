@@ -1,4 +1,4 @@
-using Plots
+using Makie, GLMakie
 
 function draw(rca::RCA{T, d}) where {T <: Int, d}
 	for idx in product([1:size(rca.world, i) for i in 1:d]...)
@@ -9,14 +9,24 @@ function draw(rca::RCA{T, d}) where {T <: Int, d}
 	end
 end
 
-function animate(spaces::AbstractArray{T, d}) where {T <: Int, d}
-	shapes = [:circle, :rect, :star5, :diamond, :hexagon, :cross, :xcross, :utriangle, :dtriangle, :rtriangle, :ltriangle, :pentagon, :heptagon, :octagon, :star4, :star6, :star7, :star8]
-	for t in axes(d, spaces)
-		cur_plot = plot(1)
-		for cur_shape in 1:maximum(spaces)
-			cur_indices = findall(x -> x == cur_shape, eachslice(spaces, d))
-			# cur_indices = [(i[1], i[2]) for i in cur_indices]
-			scatter!([i[1] for i in cur_indices], [i[2] for i in cur_indices]; shape = shapes[cur_shape])
-		end
+function animate(spaces::AbstractArray{T, d};
+	framerate::Int64 = 5,
+	save_name::String) where {T <: Int, d}
+
+	#initial time at 1
+	time = Observable(1)
+	# time steps is the idx for space
+	timestamps = range(1, axes(spcaes, d); step = 1)
+
+	shapes = [:circle]
+
+	space = @lift(eachslice(spaces; dim = d)[$time])
+
+	cur_indices = findall(x -> x == 2, space)
+	fig = scatter!([i[1] for i in cur_indices], [i[2] for i in cur_indices]; shape = :circle)
+
+	record(fig, save_name, timestamps;
+		framerate = framerate) do t
+		time[] = t
 	end
 end
