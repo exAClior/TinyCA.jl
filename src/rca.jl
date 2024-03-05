@@ -1,64 +1,34 @@
 using IterTools
 
 mutable struct RCA{T <: Int, d}
-	n::Int # number of cell states
-	# space of cell at time t
-	space_t::Array{T, d}
-	# space of cell at time t-1
-	space_tminus1::Array{T, d}
-	# boundary_condition::String
+	parity::T
+	world::Array{T, d}
 end
 
 function Base.copy(rca::RCA{T, d}) where {T, d}
-	return RCA(rca.n, copy(rca.space_t), copy(rca.space_tminus1))
+	return RCA(rca.parity, copy(rca.world))
 end
 
-function RCA(n::Int, space::Array{Int, d}) where d
-	return RCA(n, space, space)
+function RCA(space::Array{T, d}) where {T <: Int, d}
+	@assert maximum(space) <= 2 "Check the cells, it should be less than 2"
+	@assert minimum(space) >= 1 "Check the cells, it should be greater than 0"
+	return RCA(0, space)
 end
 
 function trans!(f::Function, rca::RCA{T, d}) where {T, d}
-	new_space = similar(rca.space_t)
-	for indices in product([1:size(rca.space_t, i) for i in 1:d]...)
-		new_space[indices...] = mod(f(neighborhood(rca.space_t, indices)) - rca.space_tminus1[indices...], rca.n)
+	new_world = similar(rca.world)
+	for indices in product([(1 + rca.parity):2:size(rca.world, i) for i in 1:d]...)
+		nb_idcs = neighborhood(rca.world, indices)
+		new_world[nb_idcs] = f(rca.world[nb_idcs])
 	end
-	rca.space_tminus1 = rca.space_t
-	rca.space_t = new_space
-	return rca
-end
-
-function un_trans!(f::Function, rca::RCA{T, d}) where {T, d}
-	old_space = similar(rca.space_t)
-	for indices in product([1:size(rca.space_t, i) for i in 1:d]...)
-		old_space[indices...] = mod(f(neighborhood(rca.space_tminus1, indices)) - rca.space_t[indices...], rca.n)
-	end
-	rca.space_t = rca.space_tminus1
-	rca.space_tminus1 = old_space
+	rca.world = new_world
+	rca.parity = mod(rca.parity + 1, 2)
 	return rca
 end
 
 function neighborhood(space::AbstractArray{T, d}, iis) where {T <: Int, d}
 	@assert length(iis) == d
-	res = Int[]
-	for diffs in product(repeat([[0, 1, -1]], d)...)
-		push!(res, space[(mod1.(iis .+ diffs, size(space, 1)))...])
-	end
-	return res
-end
-
-function draw(rca::RCA{T, d}, t::String) where {T <: Int, d}
-	if t == "cur"
-		draw(rca.space_t)
-	else
-		draw(rca.space_tminus1)
-	end
-end
-
-function draw(space::AbstractArray{T, d}) where {T <: Int, d}
-	for idx in product([1:size(space, i) for i in 1:d]...)
-		print(space[idx...], " ")
-		if idx[1] == size(space, 1)
-			println()
-		end
-	end
+	cis = LinearIndices(space)
+	idcs = cis[[[ii, mod1(ii + 1, size(space, 1))] for ii in iis]...]
+	return idcs
 end

@@ -2,31 +2,55 @@ using Test, TinyCA
 
 @testset "rca helpers" begin
 	space_1d = [0, 1, 0]
-	@test neighborhood(space_1d, (2,)) == [1, 0, 0]
+	@test neighborhood(space_1d, (2,)) == [2, 3]
 
-	space_2d = [1 2 3; 4 5 6; 7 8 9]
-	@test neighborhood(space_2d, (2, 2)) == [5, 8, 2, 6, 9, 3, 4, 7, 1]
-	@test neighborhood(space_2d, (1, 1)) == [1, 4, 7, 2, 5, 8, 3, 6, 9]
+	space_2d = [1 4 7; 2 5 8; 3 6 9]
+	@test neighborhood(space_2d, (2, 2)) == [5 8; 6 9]
+	@test neighborhood(space_2d, (3, 3)) == [9 3; 7 1]
 end
 
 @testset "transition" begin
-	rca = RCA(2, [0 1 0; 0 1 0; 0 1 0])
+	rca = RCA([1 2 1 2; 1 2 1 2; 1 2 1 2; 1 2 1 2])
 
-	function allone(x)
-		if all(x .== 1)
-			return 1
+	function reversible_4(x::AbstractMatrix)
+		if x == [1 1; 1 1]
+			return x
+		elseif x == [1 1; 2 1]
+			return [1 2; 1 1]
+		elseif x == [1 2; 2 1]
+			return [2 1; 1 2]
+		elseif x == [1 2; 1 2]
+			return [1 2; 1 2]
+		elseif x == [2 2; 1 2]
+			return [2 2; 1 2]
 		else
-			return 0
+			return [2 2; 2 2]
 		end
 	end
 
-	rca_change = TinyCA.trans!(allone, copy(rca))
+	function inv_reversible_4(x::AbstractMatrix)
+		if x == [1 1; 1 1]
+			return x
+		elseif x == [1 2; 1 1]
+			return [1 1; 2 1]
+		elseif x == [2 1; 1 2]
+			return [1 2; 2 1]
+		elseif x == [1 2; 1 2]
+			return [1 2; 1 2]
+		elseif x == [2 2; 1 2]
+			return [2 2; 1 2]
+		else
+			return [2 2; 2 2]
+		end
+	end
 
-	rca_back = TinyCA.un_trans!(allone, copy(rca_change))
+	rca_change = trans!(reversible_4, copy(rca))
+	rca_change.parity = mod(rca_change.parity + 1, 2)
+	rca_back = trans!(inv_reversible_4, copy(rca_change))
 
-	draw(rca_back, "cur")
-	draw(rca_back, "prev")
+	draw(rca_back)
 
-	@test rca_back.space_t == rca.space_t
-	@test rca_back.space_tminus1 == rca.space_tminus1
+	draw(rca_change)
+
+	@test rca_back.world == rca.world
 end
