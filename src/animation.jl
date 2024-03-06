@@ -9,24 +9,38 @@ function draw(rca::RCA{T, d}) where {T <: Int, d}
 	end
 end
 
-function animate(spaces::AbstractArray{T, d};
-	framerate::Int64 = 5,
-	save_name::String) where {T <: Int, d}
-
+function animate(spaces::AbstractArray{T, d}; framerate::Int, save_name::String) where {T <: Int, d}
+	x_limit, y_limit = size(eachslice(spaces; dims = d)[1])
 	#initial time at 1
 	time = Observable(1)
 	# time steps is the idx for space
-	timestamps = range(1, axes(spcaes, d); step = 1)
+	timestamps = axes(spaces, d)
 
-	shapes = [:circle]
+	space = @lift(eachslice(spaces; dims = d)[$time])
 
-	space = @lift(eachslice(spaces; dim = d)[$time])
+	function find_pos(space)
+		cur_indices = findall(x -> x == 2, space)
+		return [Point2(i[1] - 0.5, i[2] - 0.5) for i in cur_indices]
+	end
 
-	cur_indices = findall(x -> x == 2, space)
-	fig = scatter!([i[1] for i in cur_indices], [i[2] for i in cur_indices]; shape = :circle)
+	positions = lift(find_pos, space)
+
+	fig, ax, line = scatter(
+		positions; marker = :rect, markerspace = :data, markersize = 1.5, color = :black,
+		axis = (;
+			xgridcolor = :black,
+			ygridcolor = :black,
+			xgridwidth = 2,
+			ygridwidth = 2,
+			aspect = 1, limits = (0, x_limit, 0, y_limit)),
+	)
+
+	ax.xticks = 1:x_limit
+	ax.yticks = 1:y_limit
 
 	record(fig, save_name, timestamps;
 		framerate = framerate) do t
+		# update observable
 		time[] = t
 	end
 end
