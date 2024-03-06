@@ -2,5 +2,6 @@
 *.jl.cov
 *.jl.mem
 *.mp4
+.DS_Store
 /docs/Manifest.toml
 /docs/build/
